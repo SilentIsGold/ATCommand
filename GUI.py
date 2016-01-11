@@ -198,7 +198,7 @@ class GUIDemo():
         """Get the abailable serial list from Serial.py
         """
         self.SerialList[:]=[] #refres list
-        self.SerialList = self.function.GetSerialPort()
+        self.SerialList = self.function.GetModemSerialPort()
         
         #update the optionbutton
         self.serialportmenu['menu'].delete(0, 'end')
@@ -212,6 +212,7 @@ class GUIDemo():
         
     def Serialchooseevent(self,value=0):
         print value,self.serialchoose.get()
+        self.function.SetModemSerialPort(self.serialchoose.get())
         
         self.displayText["text"] = "Serialchooseevent" + str(self.SerialList) + str(self.serialchoose.get())
         pass
