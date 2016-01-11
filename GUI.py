@@ -1,24 +1,25 @@
 from  Tkinter import *
-from Command import Command 
-from Serial import Serialport
+
+from Function import Function
    
 class GUIDemo():
     def __init__(self, master=None):
-        self.commandserial = Serialport()
-        self.GPSserial = Serialport()
-        self.modem = Command()
-        self.SerialList=["Refresh"]
-        
+        #self.commandserial = Serialport()
+        #self.GPSserial = Serialport()
+        #self.modem = Command()
+        self.function = Function()
+        self.SerialList=["Choose"]
+        #master.minsize(width=666, height=666)
         
         self.myParent = master
 
-        self.main_container = Frame(master, bg="green")
+        self.main_container = Frame(master, bg="green",width=666, height=666)
         self.main_container.grid()
 
-        self.top_frame = Frame(self.main_container, bg="red")
+        self.top_frame = Frame(self.main_container, bg="red",width=666, height=666)
         self.top_frame.grid()
         
-        self.bottom_frame = Frame(self.main_container, bd=2, bg="yellow")
+        self.bottom_frame = Frame(self.main_container, bd=2, bg="yellow",width=666, height=666)
         self.bottom_frame.grid(row=2, column=0)
 
         self.top_left = Frame(self.top_frame, bd=2)
@@ -33,6 +34,7 @@ class GUIDemo():
         
         self.createTopWidgets()
         self.createButtomWidgets()
+        #self.Serialrefreshevent()
     
         
         
@@ -84,7 +86,7 @@ class GUIDemo():
         Cancel = Button(self.popwindows[0], text="Cancel", command=self.popwindows[0].destroy)
         Cancel.grid(row=1, column=1)
         
-        Save = Button(self.popwindows[0], text="Save", command=self.popwindows[0].destroy)
+        Save = Button(self.popwindows[0], text="Save", command=self.LogconfigSaveevent)
         Save.grid(row=1, column=0)
         
         self.popwindows[0].withdraw()
@@ -107,7 +109,7 @@ class GUIDemo():
         button = Button(self.popwindows[1], text="Cancel", command=self.popwindows[1].destroy)
         button.grid(row=1, column=1)
         
-        Save = Button(self.popwindows[1], text="Save", command=self.popwindows[1].destroy)
+        Save = Button(self.popwindows[1], text="Save", command=self.AutosendconfigSaveevent)
         Save.grid(row=1, column=0)
         
         self.popwindows[1].withdraw()
@@ -115,7 +117,7 @@ class GUIDemo():
     def createSerialButton(self):
         self.serialchoose = StringVar(self.top_frame)
         self.serialchoose.set(self.SerialList[0]) # default value
-        self.serialportmenu =  OptionMenu(self.top_frame, self.serialchoose, self.SerialList)
+        self.serialportmenu =  OptionMenu(self.top_frame, self.serialchoose, self.SerialList, command = self.Serialchooseevent )
         self.serialportmenu.grid(row=2, column=2)
         
         self.serialrefresh = Button(self.top_frame, text = "Serial refresh", command=self.Serialrefreshevent )
@@ -134,7 +136,7 @@ class GUIDemo():
         button = Button(self.popwindows[2], text="Cancel", command=self.popwindows[2].destroy)
         button.grid(row=1, column=1)
         
-        Save = Button(self.popwindows[2], text="Save", command=self.popwindows[2].destroy)
+        Save = Button(self.popwindows[2], text="Save", command=self.GPSSaveevent)
         Save.grid(row=1, column=0)
         
         self.popwindows[2].withdraw()
@@ -155,7 +157,7 @@ class GUIDemo():
         button = Button(self.popwindows[3], text="Cancel", command=self.popwindows[3].destroy)
         button.grid(row=1, column=1)
         
-        Save = Button(self.popwindows[3], text="Save", command=self.popwindows[3].destroy)
+        Save = Button(self.popwindows[3], text="Save", command=self.UploadconfigSaveevent)
         Save.grid(row=1, column=0)
         
         self.popwindows[3].withdraw()
@@ -181,7 +183,7 @@ class GUIDemo():
         self.displayText["text"] = "Logconfigevent" + str(self.logstate.get())
         pass
     
-    def AutoSendevent(self):
+    def Autosendevent(self):
         pass
     
     def Autosendconfigevent(self):
@@ -196,16 +198,23 @@ class GUIDemo():
         """Get the abailable serial list from Serial.py
         """
         self.SerialList[:]=[] #refres list
-        self.SerialList = self.commandserial.GetSerialPortList()
+        self.SerialList = self.function.GetSerialPort()
         
         #update the optionbutton
         self.serialportmenu['menu'].delete(0, 'end')
         for choice in self.SerialList:
-            self.serialportmenu['menu'].add_command(label=choice, command=lambda v=choice: self.serialchoose.set(v) )
-
+            self.serialchoose.set(choice)
+            #self.serialportmenu['menu'].add_command(label=choice, command=lambda v=choice: self.serialchoose.set(v) )
+            self.serialportmenu['menu'].add_command(label=choice, command=self.Serialchooseevent )
+        #self.serialportmenu['command']=self.Serialchooseevent
         
         self.displayText["text"] = "Serialrefreshevent" + str(self.SerialList) + str(self.serialchoose.get())
-       
+        
+    def Serialchooseevent(self,value=0):
+        print value,self.serialchoose.get()
+        
+        self.displayText["text"] = "Serialchooseevent" + str(self.SerialList) + str(self.serialchoose.get())
+        pass
     
     def GPSevent(self):
         self.popwindows[2].deiconify()
@@ -235,7 +244,22 @@ class GUIDemo():
         mess = self.inputField.get() + "\r\n"
         self.txt.insert(END,mess)
         
-    
+    def LogconfigSaveevent(self):
+        
+        self.displayText["text"] = "LogconfigSaveevent" 
+        pass
+        
+    def AutosendconfigSaveevent(self):
+        self.displayText["text"] = "AutosendconfigSaveevent" 
+        pass
+        
+    def GPSSaveevent(self):
+        self.displayText["text"] = "GPSSaveevent" 
+        pass
+        
+    def UploadconfigSaveevent(self):
+        self.displayText["text"] = "UploadconfigSaveevent" 
+        pass
     
 class MyApp:
     def __init__(self, parent):

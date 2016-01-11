@@ -5,7 +5,7 @@ from datetime import datetime
 from Serial import Serialport
 
 
-log = open("log.txt","w")
+
 count =0
 
 class Command():
