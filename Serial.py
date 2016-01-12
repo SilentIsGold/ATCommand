@@ -8,6 +8,7 @@ class Serialport():
     def __init__(self):
         self.SerialPortList= []
         self.SerialPortUsed = ""
+        self.SerialPort=None
         self.SendInterval =  "1000"
         
         self.LogFileName = ""
@@ -49,9 +50,9 @@ class Serialport():
         """Set serial port to use modem
         """
         self.SerialPortUsed = port
-        self.SerialPortUsed = serial.Serial(port,baudrate,timeout=0)
-        self.SerialPortUsed.close()
-        self.SerialPortUsed.open()
+        self.SerialPort = serial.Serial(port,baudrate,timeout=0)
+        self.SerialPort.close()
+        self.SerialPort.open()
     
     def GetSerialPortList(self):
         """return available Serial port
@@ -63,9 +64,9 @@ class Serialport():
         """Send Serial command to serial port
         """
         if self.SerialPortUsed != "":
-            self.Serial.write(command)
+            self.SerialPort.write(command)
             time.sleep(self.SendInterval)   
-            return self.Serial.read(size=100)
+            return self.SerialPort.read(size=100)
         else:
             raise EnvironmentError('Serial not choosen')
 

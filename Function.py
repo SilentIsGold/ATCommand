@@ -40,14 +40,14 @@ class Function():
         """
         pass
         
-    def SetSerialPort(self,port):
-        """Set CommandSerial
+    def SetModemSerialPort(self,port):
+        """Set ModemSerial
         """
         self.commandserial.SetSerialPort(port)
         pass
         
-    def GetSerialPort(self):
-        """Get Command serial list
+    def GetModemSerialPort(self):
+        """Get Modem serial list
         """
         return self.commandserial.GetSerialPortList()
         pass
@@ -72,5 +72,9 @@ class Function():
         """
         pass
        
-       
+    def SetUserInPut(self,mess):
+        """Send the input to the serial port
+        """
+        output = self.commandserial.SendSerialCommand(mess)
+        return "UserInput:"+mess+"\n Output:"+output
        

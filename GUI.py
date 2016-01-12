@@ -13,7 +13,7 @@ class GUIDemo():
         
         self.myParent = master
 
-        self.main_container = Frame(master, bg="green",width=666, height=666)
+        self.main_container = Frame(master, bg="green",width=800, height=666)
         self.main_container.grid()
 
         self.top_frame = Frame(self.main_container, bg="red",width=666, height=666)
@@ -29,8 +29,8 @@ class GUIDemo():
         self.top_right.grid(row=0, column=2)
         
         self.popwindows=[]
-        for page in range(4):
-            self.popwindows.append(Toplevel(master))
+        # for page in range(4):
+            # self.popwindows.append(Toplevel(master))
         
         self.createTopWidgets()
         self.createButtomWidgets()
@@ -70,6 +70,7 @@ class GUIDemo():
         self.displayText.grid(row=4, column=1)
     
     def createLogButton(self):
+        myrow=0
         self.logstate = IntVar()
         self.logbutton = Checkbutton(self.top_frame, text="Log Data", variable=self.logstate)
         self.logbutton.grid(row=2, column=0)
@@ -79,17 +80,7 @@ class GUIDemo():
         
         #self.top.append(Toplevel())
         #self.top[0].geometry("%dx%d%+d%+d" % (300, 200, 250, 125))
-        self.popwindows[0].title("Log Config")
-        msg = Label(self.popwindows[0], text="Log configure window")
-        msg.grid(row=0, column=0)
         
-        Cancel = Button(self.popwindows[0], text="Cancel", command=self.popwindows[0].destroy)
-        Cancel.grid(row=1, column=1)
-        
-        Save = Button(self.popwindows[0], text="Save", command=self.LogconfigSaveevent)
-        Save.grid(row=1, column=0)
-        
-        self.popwindows[0].withdraw()
         
         
     def createAutoSendButton(self):
@@ -102,17 +93,7 @@ class GUIDemo():
         
         #self.top.append(Toplevel())
         #self.top[0].geometry("%dx%d%+d%+d" % (300, 200, 250, 125))
-        self.popwindows[1].title("Log Config")
-        msg = Label(self.popwindows[1], text="AutoSend configure window")
-        msg.grid(row=0, column=0)
         
-        button = Button(self.popwindows[1], text="Cancel", command=self.popwindows[1].destroy)
-        button.grid(row=1, column=1)
-        
-        Save = Button(self.popwindows[1], text="Save", command=self.AutosendconfigSaveevent)
-        Save.grid(row=1, column=0)
-        
-        self.popwindows[1].withdraw()
         
     def createSerialButton(self):
         self.serialchoose = StringVar(self.top_frame)
@@ -129,19 +110,10 @@ class GUIDemo():
         
         #self.top.append(Toplevel())
         #self.top[0].geometry("%dx%d%+d%+d" % (300, 200, 250, 125))
-        self.popwindows[2].title("Log Config")
-        msg = Label(self.popwindows[2], text="GPS configure window")
-        msg.grid(row=0, column=0)
         
-        button = Button(self.popwindows[2], text="Cancel", command=self.popwindows[2].destroy)
-        button.grid(row=1, column=1)
-        
-        Save = Button(self.popwindows[2], text="Save", command=self.GPSSaveevent)
-        Save.grid(row=1, column=0)
-        
-        self.popwindows[2].withdraw()
         
     def createUploadButton(self):
+        myrow=0
         self.upload = Button(self.top_frame, text = "Upload", command = self.Uploadevent)
         self.upload.grid(row=2, column=5 )
         
@@ -150,17 +122,7 @@ class GUIDemo():
         
         #self.top.append(Toplevel())
         #self.top[0].geometry("%dx%d%+d%+d" % (300, 200, 250, 125))
-        self.popwindows[3].title("Log Config")
-        msg = Label(self.popwindows[3], text="Upload configure window")
-        msg.grid(row=0, column=0)
         
-        button = Button(self.popwindows[3], text="Cancel", command=self.popwindows[3].destroy)
-        button.grid(row=1, column=1)
-        
-        Save = Button(self.popwindows[3], text="Save", command=self.UploadconfigSaveevent)
-        Save.grid(row=1, column=0)
-        
-        self.popwindows[3].withdraw()
     
     def createButtomWidgets(self):
         
@@ -179,7 +141,27 @@ class GUIDemo():
         pass
     
     def Logconfigevent(self):
-        self.popwindows[0].deiconify()
+        myrow=0
+        #self.popwindows.append(Toplevel())
+        self.Logpopwindows = Toplevel()
+        self.Logpopwindows.title("Log Config")
+        msg = Label(self.Logpopwindows, text="Log configure window")
+        msg.grid(row=myrow, column=0)
+        myrow+=1
+        
+        self.logTimeStampstate = IntVar()
+        logFileText = Checkbutton(self.Logpopwindows,text="Use Time Stamp", variable=self.logTimeStampstate)
+        logFileText.grid(row=myrow,column=0)
+        myrow+=1
+        
+        
+        Cancel = Button(self.Logpopwindows, text="Cancel", command=self.Logpopwindows.destroy)
+        Cancel.grid(row=myrow, column=1)
+        
+        Save = Button(self.Logpopwindows, text="Save", command=self.LogconfigSaveevent)
+        Save.grid(row=myrow, column=0)
+
+        
         self.displayText["text"] = "Logconfigevent" + str(self.logstate.get())
         pass
     
@@ -187,7 +169,19 @@ class GUIDemo():
         pass
     
     def Autosendconfigevent(self):
-        self.popwindows[1].deiconify()
+        myrow=0
+        self.Autosendpopwindows=Toplevel()
+        self.Autosendpopwindows.title("Log Config")
+        msg = Label(self.Autosendpopwindows, text="AutoSend configure window")
+        msg.grid(row=0, column=0)
+        
+        button = Button(self.Autosendpopwindows, text="Cancel", command=self.Autosendpopwindows.destroy)
+        button.grid(row=1, column=1)
+        
+        Save = Button(self.Autosendpopwindows, text="Save", command=self.AutosendconfigSaveevent)
+        Save.grid(row=1, column=0)
+        
+
         self.displayText["text"] = "Autosendconfigevent" + str(self.autosendstate.get())
         pass
         
@@ -211,6 +205,8 @@ class GUIDemo():
         self.displayText["text"] = "Serialrefreshevent" + str(self.SerialList) + str(self.serialchoose.get())
         
     def Serialchooseevent(self,value=0):
+        """User choose a serial port
+        """
         print value,self.serialchoose.get()
         self.function.SetModemSerialPort(self.serialchoose.get())
         
@@ -218,7 +214,18 @@ class GUIDemo():
         pass
     
     def GPSevent(self):
-        self.popwindows[2].deiconify()
+        myrow=0
+        self.GPSpopwindows=Toplevel()
+        self.GPSpopwindows.title("Log Config")
+        msg = Label(self.GPSpopwindows, text="GPS configure window")
+        msg.grid(row=0, column=0)
+        
+        button = Button(self.GPSpopwindows, text="Cancel", command=self.GPSpopwindows.destroy)
+        button.grid(row=1, column=1)
+        
+        Save = Button(self.GPSpopwindows, text="Save", command=self.GPSSaveevent)
+        Save.grid(row=1, column=0)
+
         self.displayText["text"] = "GPSevent" 
         pass
         
@@ -229,15 +236,42 @@ class GUIDemo():
         pass
        
     def Uploadconfigevent(self):
+        myrow=0
+        self.Uploadpopwindows=Toplevel()
+        self.Uploadpopwindows.title("Log Config")
+        msg = Label(self.Uploadpopwindows, text="Upload configure window")
+        msg.grid(row=myrow, column=0)
+        myrow+=1
         
-        self.popwindows[3].deiconify()
+        uploadUserText = Label(self.Uploadpopwindows,text="UserName")
+        uploadUserText.grid(row=myrow,column=0)
+        
+        self.uploadUserField = Entry(self.Uploadpopwindows,width=15)
+        self.uploadUserField.grid(row=myrow,column=1)
+        myrow+=1
+        
+        uploadEmailText = Label(self.Uploadpopwindows, text="User Email")
+        uploadEmailText.grid(row=myrow,column=0)
+        
+        uploadEmailField = Entry(self.Uploadpopwindows,width=30)
+        uploadEmailField.grid(row=myrow,column=1)
+        myrow+=1
+        
+        button = Button(self.Uploadpopwindows, text="Cancel", command=self.Uploadpopwindows.destroy)
+        button.grid(row=myrow, column=1)
+        
+        Save = Button(self.Uploadpopwindows, text="Save", command=self.UploadconfigSaveevent)
+        Save.grid(row=myrow, column=0)
+        
+
         self.displayText["text"] = "Uploadconfigevent" 
         pass
     
     def Enterevent(self):
         self.displayText["text"] = "This is Enter."
-        mess = self.inputField.get() + "\r\n"
-        self.txt.insert(END,mess)
+        mess = self.inputField.get() + "\r"
+        output = self.function.SetUserInPut(mess)
+        self.txt.insert(END,output)
         
     def EntryEnterEvent(self,event):
         print "click"
@@ -246,19 +280,24 @@ class GUIDemo():
         self.txt.insert(END,mess)
         
     def LogconfigSaveevent(self):
+    
         
+        self.Logpopwindows.destroy()
         self.displayText["text"] = "LogconfigSaveevent" 
         pass
         
     def AutosendconfigSaveevent(self):
+        self.Autosendpopwindows.destroy()
         self.displayText["text"] = "AutosendconfigSaveevent" 
         pass
         
     def GPSSaveevent(self):
+        self.GPSpopwindows.withdraw()
         self.displayText["text"] = "GPSSaveevent" 
         pass
         
     def UploadconfigSaveevent(self):
+        self.Uploadpopwindows.withdraw()
         self.displayText["text"] = "UploadconfigSaveevent" 
         pass
     
@@ -292,6 +331,7 @@ class MyApp:
  
 if __name__ == '__main__':
     root = Tk()
+    #root.geometry("800x600")
     root.title("AT-Command")
     app = GUIDemo(master=root)
     root.mainloop()
