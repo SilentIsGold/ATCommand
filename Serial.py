@@ -10,9 +10,10 @@ class Serialport():
         self.SerialPortUsed = ""
         self.SerialPort=None
         self.SendInterval =  "1000"
-        
+        self.Modem=None
         self.LogFileName = ""
         self.LogPath = "./"
+        self.
         
         self.DetectPlatformOS()
      
@@ -20,6 +21,11 @@ class Serialport():
         pass
         
     def CheckLogName(self,name):
+        pass
+    
+    def SpecialCommand(self,path,command):
+        """For those modem that need to special command to enter debug mode
+        """
         pass
     
     def GetPlatformOS(self):

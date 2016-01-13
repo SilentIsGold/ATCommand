@@ -3,8 +3,9 @@ import sys
 import glob
 from datetime import datetime
 from Serial import Serialport
-from Command import Command 
+from Modem import ModemCommand 
 from Serial import Serialport
+from GPS import GPSCommand
 
 
 count =0
@@ -15,7 +16,8 @@ class Function():
         """
         self.commandserial = Serialport()
         self.GPSserial = Serialport()
-        self.modem = Command()
+        self.modem = ModemCommand()
+        self.gps = GPSCommand()
         
 
     

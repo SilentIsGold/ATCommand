@@ -2,13 +2,13 @@ import time
 import sys
 import glob
 from datetime import datetime
-from Serial import Serialport
+
 
 
 
 count =0
 
-class Command():
+class ModemCommand():
     def __init__(self):
         """ModemVailList is support model list
         ModemConfList is the conf file for support command list
@@ -25,7 +25,7 @@ class Command():
         return self.ModemVailList
     
     def SetChooseModem(self,modem):
-        """Get choosen modem to use
+        """set  modem to use
         """
         self.ChooseModem = modem
 
