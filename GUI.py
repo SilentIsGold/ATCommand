@@ -8,7 +8,7 @@ class GUIDemo():
         #self.GPSserial = Serialport()
         #self.modem = Command()
         self.function = Function()
-        self.SerialList=["Choose"]
+        self.ModemSerialList=["Choose"]
         #master.minsize(width=666, height=666)
         
         self.myParent = master
@@ -34,7 +34,7 @@ class GUIDemo():
         
         self.createTopWidgets()
         self.createButtomWidgets()
-        #self.Serialrefreshevent()
+        #self.ModemSerialrefreshevent()
     
         
         
@@ -42,7 +42,7 @@ class GUIDemo():
         self.createUserInputButton()
         self.createLogButton()
         self.createAutoSendButton()
-        self.createSerialButton()
+        self.createModemSerialButton()
         self.createGPSButton()
         self.createUploadButton()
         self.createSystemLabel()    
@@ -95,14 +95,14 @@ class GUIDemo():
         #self.top[0].geometry("%dx%d%+d%+d" % (300, 200, 250, 125))
         
         
-    def createSerialButton(self):
-        self.serialchoose = StringVar(self.top_frame)
-        self.serialchoose.set(self.SerialList[0]) # default value
-        self.serialportmenu =  OptionMenu(self.top_frame, self.serialchoose, self.SerialList, command = self.Serialchooseevent )
-        self.serialportmenu.grid(row=2, column=2)
+    def createModemSerialButton(self):
+        self.Modemserialchoose = StringVar(self.top_frame)
+        self.Modemserialchoose.set(self.ModemSerialList[0]) # default value
+        self.Modemserialportmenu =  OptionMenu(self.top_frame, self.Modemserialchoose, self.ModemSerialList, command = self.ModemSerialchooseevent )
+        self.Modemserialportmenu.grid(row=2, column=2)
         
-        self.serialrefresh = Button(self.top_frame, text = "Serial refresh", command=self.Serialrefreshevent )
-        self.serialrefresh.grid(row=3, column=2)
+        self.Modemserialrefresh = Button(self.top_frame, text = "Serial refresh", command=self.ModemSerialrefreshevent )
+        self.Modemserialrefresh.grid(row=3, column=2)
         
     def createGPSButton(self):
         self.gps = Button(self.top_frame, text = "GPS Config", command = self.GPSevent)
@@ -152,6 +152,7 @@ class GUIDemo():
         self.logTimeStampstate = IntVar()
         logFileText = Checkbutton(self.Logpopwindows,text="Use Time Stamp", variable=self.logTimeStampstate)
         logFileText.grid(row=myrow,column=0)
+        logFileText.select() #can select the check box, deselect cancel.
         myrow+=1
         
         
@@ -185,32 +186,32 @@ class GUIDemo():
         self.displayText["text"] = "Autosendconfigevent" + str(self.autosendstate.get())
         pass
         
-    def Serialevent(self):
+    def ModemSerialevent(self):
         pass
     
-    def Serialrefreshevent(self):
+    def ModemSerialrefreshevent(self):
         """Get the abailable serial list from Serial.py
         """
-        self.SerialList[:]=[] #refres list
-        self.SerialList = self.function.GetModemSerialPort()
+        self.ModemSerialList[:]=[] #refres list
+        self.ModemSerialList = self.function.GetModemSerialPort()
         
         #update the optionbutton
-        self.serialportmenu['menu'].delete(0, 'end')
-        for choice in self.SerialList:
-            self.serialchoose.set(choice)
-            #self.serialportmenu['menu'].add_command(label=choice, command=lambda v=choice: self.serialchoose.set(v) )
-            self.serialportmenu['menu'].add_command(label=choice, command=self.Serialchooseevent )
-        #self.serialportmenu['command']=self.Serialchooseevent
+        self.Modemserialportmenu['menu'].delete(0, 'end')
+        for choice in self.ModemSerialList:
+            self.Modemserialchoose.set(choice)
+            #self.Modemserialportmenu['menu'].add_command(label=choice, command=lambda v=choice: self.serialchoose.set(v) )
+            self.Modemserialportmenu['menu'].add_command(label=choice, command=self.ModemSerialchooseevent )
+        #self.Modemserialportmenu['command']=self.ModemSerialchooseevent
         
-        self.displayText["text"] = "Serialrefreshevent" + str(self.SerialList) + str(self.serialchoose.get())
+        self.displayText["text"] = "ModemSerialrefreshevent" + str(self.ModemSerialList) + str(self.Modemserialchoose.get())
         
-    def Serialchooseevent(self,value=0):
+    def ModemSerialchooseevent(self,value=0):
         """User choose a serial port
         """
-        print value,self.serialchoose.get()
-        self.function.SetModemSerialPort(self.serialchoose.get())
+        print value,self.Modemserialchoose.get()
+        self.function.SetModemSerialPort(self.Modemserialchoose.get())
         
-        self.displayText["text"] = "Serialchooseevent" + str(self.SerialList) + str(self.serialchoose.get())
+        self.displayText["text"] = "ModemSerialchooseevent" + str(self.ModemSerialList) + str(self.Modemserialchoose.get())
         pass
     
     def GPSevent(self):
@@ -218,13 +219,19 @@ class GUIDemo():
         self.GPSpopwindows=Toplevel()
         self.GPSpopwindows.title("Log Config")
         msg = Label(self.GPSpopwindows, text="GPS configure window")
-        msg.grid(row=0, column=0)
+        msg.grid(row=myrow, column=0)
+        myrow+=1
+        
+        self.logGPSstate = IntVar()
+        logFileText = Checkbutton(self.GPSpopwindows,text="Log GPS file", variable=self.logGPSstate)
+        logFileText.grid(row=myrow,column=0)
+        myrow+=1
         
         button = Button(self.GPSpopwindows, text="Cancel", command=self.GPSpopwindows.destroy)
-        button.grid(row=1, column=1)
+        button.grid(row=myrow, column=1)
         
         Save = Button(self.GPSpopwindows, text="Save", command=self.GPSSaveevent)
-        Save.grid(row=1, column=0)
+        Save.grid(row=myrow, column=0)
 
         self.displayText["text"] = "GPSevent" 
         pass

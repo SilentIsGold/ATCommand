@@ -4,16 +4,23 @@ import sys
 import glob
 from datetime import datetime
 
+def make_dir(path):
+    if not os.path.exists(path):
+        os.makedirs(path)
+
+
 class Serialport():
     def __init__(self):
+        
         self.SerialPortList= []
         self.SerialPortUsed = ""
         self.SerialPort=None
         self.SendInterval =  "1000"
         self.Modem=None
-        self.LogFileName = ""
-        self.LogPath = "./"
-        self.
+        self.ModemLogFileName = ""
+        self.ModemLogPath = "./"
+        self.GPSLogFileName = ""
+        self.GPSLogPath="./"
         
         self.DetectPlatformOS()
      
