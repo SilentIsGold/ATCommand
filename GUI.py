@@ -9,6 +9,8 @@ class GUIDemo():
         #self.modem = Command()
         self.function = Function()
         self.ModemSerialList=["Choose"]
+        self.ModemCommandList=[]
+        self.ModemCommandListState=[]
         #master.minsize(width=666, height=666)
         
         self.myParent = master
@@ -149,10 +151,11 @@ class GUIDemo():
         msg.grid(row=myrow, column=0)
         myrow+=1
         
-        self.logTimeStampstate = IntVar()
-        logFileText = Checkbutton(self.Logpopwindows,text="Use Time Stamp", variable=self.logTimeStampstate)
-        logFileText.grid(row=myrow,column=0)
-        logFileText.select() #can select the check box, deselect cancel.
+        ModemLogText = Label(self.Logpopwindows,text="Log path:")
+        ModemLogText.grid(row=myrow,column=0)
+        
+        self.ModemLogField = Entry(self.Logpopwindows,width=30)
+        self.ModemLogField.grid(row=myrow,column=1)
         myrow+=1
         
         
@@ -170,17 +173,42 @@ class GUIDemo():
         pass
     
     def Autosendconfigevent(self):
+        timeinterval, CommandList = self.function.GetAutoSendConfig()
+        
+        
         myrow=0
         self.Autosendpopwindows=Toplevel()
         self.Autosendpopwindows.title("Log Config")
         msg = Label(self.Autosendpopwindows, text="AutoSend configure window")
-        msg.grid(row=0, column=0)
+        msg.grid(row=myrow, column=0)
+        myrow+=1
         
+        AutoTimeIntervalText = Label(self.Autosendpopwindows,text="Sending Interval (ms):")
+        AutoTimeIntervalText.grid(row=myrow,column=0)
+        
+        self.AutoTimeIntervalField = Entry(self.Autosendpopwindows,width=10)
+        self.AutoTimeIntervalField.grid(row=myrow,column=1)
+        self.AutoTimeIntervalField.insert(0,timeinterval)
+        myrow+=1
+        
+        self.AutoSendMB=Menubutton ( self.Autosendpopwindows, text="Command", relief=RAISED )
+        self.AutoSendMB.grid(row=myrow, column=0)
+        myrow+=1
+        self.AutoSendMB.menu = Menu ( self.AutoSendMB, tearoff = 0 )
+        self.AutoSendMB["menu"] = self.AutoSendMB.menu
+        self.ModemCommandList[:]=[]
+        self.ModemCommandList= CommandList
+        self.ModemCommandListState[:]=[]
+        for i in range(len(CommandList)):
+            self.ModemCommandListState.append(IntVar())
+            self.AutoSendMB.menu.add_checkbutton (label=self.ModemCommandList[i],variable=self.ModemCommandListState[i],command=lambda choice=i: self.ModemCommandListChoose(choice))
+            
+
         button = Button(self.Autosendpopwindows, text="Cancel", command=self.Autosendpopwindows.destroy)
-        button.grid(row=1, column=1)
+        button.grid(row=myrow, column=1)
         
         Save = Button(self.Autosendpopwindows, text="Save", command=self.AutosendconfigSaveevent)
-        Save.grid(row=1, column=0)
+        Save.grid(row=myrow, column=0)
         
 
         self.displayText["text"] = "Autosendconfigevent" + str(self.autosendstate.get())
@@ -307,6 +335,12 @@ class GUIDemo():
         self.Uploadpopwindows.withdraw()
         self.displayText["text"] = "UploadconfigSaveevent" 
         pass
+    
+    def ModemCommandListChoose(self,i):
+        self.ModemCommandListState[3].set(1)
+        print self.ModemCommandList[i],i,self.ModemCommandListState[i].get()
+    
+    
     
 class MyApp:
     def __init__(self, parent):

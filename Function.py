@@ -40,6 +40,9 @@ class Function():
     def GetAutoSendConfig(self):
         """Read info from AutoSendConfig
         """
+        CommandList=[1,2,3,4,5,6,7]
+        print "function ",self.commandserial.GetSendInterval()
+        return self.commandserial.GetSendInterval(), CommandList
         pass
         
     def SetModemSerialPort(self,port):

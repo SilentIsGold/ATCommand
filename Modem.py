@@ -36,5 +36,8 @@ class ModemCommand():
             CommandList = f.read().splitlines()
         return CommandList
         
-        
+    def SpecialCommand(self,path,command):
+        """For those modem that need to special command to enter debug mode
+        """
+        pass    
        

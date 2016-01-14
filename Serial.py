@@ -15,7 +15,7 @@ class Serialport():
         self.SerialPortList= []
         self.SerialPortUsed = ""
         self.SerialPort=None
-        self.SendInterval =  "1000"
+        self.SendInterval = 1
         self.Modem=None
         self.ModemLogFileName = ""
         self.ModemLogPath = "./"
@@ -30,10 +30,7 @@ class Serialport():
     def CheckLogName(self,name):
         pass
     
-    def SpecialCommand(self,path,command):
-        """For those modem that need to special command to enter debug mode
-        """
-        pass
+    
     
     def GetPlatformOS(self):
         return self.Platform
@@ -57,7 +54,10 @@ class Serialport():
         """
         self.SendInterval = interval/1000.0 #time.sleep use second
 
-
+    def GetSendInterval(self):
+        """return SendInterval
+        """
+        return self.SendInterval*1000
             
     def SetSerialPort(self, port,baudrate=9600):
         """Set serial port to use modem
