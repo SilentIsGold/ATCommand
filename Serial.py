@@ -15,7 +15,7 @@ class Serialport():
         self.SerialPortList= []
         self.SerialPortUsed = ""
         self.SerialPort=None
-        self.SendInterval = 1
+        #self.SendInterval = 1
         self.Modem=None
         self.ModemLogFileName = ""
         self.ModemLogPath = "./"
@@ -78,7 +78,7 @@ class Serialport():
         """
         if self.SerialPortUsed != "":
             self.SerialPort.write(command)
-            time.sleep(self.SendInterval)   
+            #time.sleep(self.SendInterval)   
             return self.SerialPort.read(size=100)
         else:
             raise EnvironmentError('Serial not choosen')
@@ -103,11 +103,12 @@ class Serialport():
         else:
             raise EnvironmentError('Unsupported platform')
 
-        
+        print ports
         for port in ports:
             try:
                 s = serial.Serial(port)
                 s.close()
                 self.SerialPortList.append(port)
+		print port
             except (OSError, serial.SerialException):
                 pass

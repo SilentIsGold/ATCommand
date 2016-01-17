@@ -159,7 +159,7 @@ class GUIDemo():
         self.scroll = Scrollbar(self.bottom_frame,command=self.txt.yview)
         self.txt.config(yscrollcommand=self.scroll.set)
         self.scroll.grid(row=0, column=7, sticky='Ens')
-    
+        self.function.SetScrollText(self.txt)
     def Logevent(self):
         pass
     
@@ -276,14 +276,14 @@ class GUIDemo():
         """Get the abailable serial list from Serial.py
         """
         self.ModemSerialList[:]=[] #refres list
-        self.ModemSerialList = self.function.GetModemSerialPort()
-        
+        self.ModemSerialList = self.function.GetSerialPort()
+        print self.ModemSerialList
         #update the optionbutton
         self.Modemserialportmenu['menu'].delete(0, 'end')
         for choice in self.ModemSerialList:
-            self.Modemserialchoosestate.set(choice)
-            #self.Modemserialportmenu['menu'].add_command(label=choice, command=lambda v=choice: self.serialchoose.set(v) )
-            self.Modemserialportmenu['menu'].add_command(label=choice, command=self.ModemSerialchooseevent )
+            #self.Modemserialchoosestate.set(choice)
+            self.Modemserialportmenu['menu'].add_command(label=choice, command=lambda v=choice: self.Modemserialchoosestate.set(v) )
+            #self.Modemserialportmenu['menu'].add_command(label=choice, command=self.ModemSerialchooseevent )
         #self.Modemserialportmenu['command']=self.ModemSerialchooseevent
         
         self.displayText["text"] = "ModemSerialrefreshevent" + str(self.ModemSerialList) + str(self.Modemserialchoosestate.get())
@@ -335,14 +335,14 @@ class GUIDemo():
         """Get the abailable serial list from Serial.py
         """
         self.GPSSerialList[:]=[] #refres list
-        self.GPSSerialList = self.function.GetModemSerialPort()
+        self.GPSSerialList = self.function.GetSerialPort()
         
         #update the optionbutton
         self.GPSserialportmenu['menu'].delete(0, 'end')
         for choice in self.GPSSerialList:
-            self.GPSserialchoosestate.set(choice)
-            #self.Modemserialportmenu['menu'].add_command(label=choice, command=lambda v=choice: self.serialchoose.set(v) )
-            self.GPSserialportmenu['menu'].add_command(label=choice, command=self.GPSSerialchooseevent )
+            #self.GPSserialchoosestate.set(choice)
+            self.Modemserialportmenu['menu'].add_command(label=choice, command=lambda v=choice: self.serialchoose.set(v) )
+            #self.GPSserialportmenu['menu'].add_command(label=choice, command=self.GPSSerialchooseevent )
         #self.Modemserialportmenu['command']=self.ModemSerialchooseevent
         
         self.displayText["text"] = "ModemSerialrefreshevent" + str(self.GPSSerialList) + str(self.GPSserialchoosestate.get())
@@ -398,7 +398,8 @@ class GUIDemo():
         self.displayText["text"] = "This is Enter."
         mess = self.inputField.get() + "\r"
         output = self.function.SetUserInPut(mess)
-        self.txt.insert(END,output)
+        #self.txt.insert(END,output)
+        #self.txt.yview(END)
         
     def EntryEnterEvent(self,event):
         print "click"
@@ -419,6 +420,8 @@ class GUIDemo():
         pass
         
     def ModemconfigSaveevent(self):
+        print "Modem",self.Modemserialchoosestate.get()
+        self.function.SetModemSerialPort(self.Modemserialchoosestate.get())
         self.Modempopwindows.destroy()
         self.displayText["text"] = "ModemconfigSaveevent" 
     
