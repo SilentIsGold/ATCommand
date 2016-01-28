@@ -10,7 +10,7 @@ class GUIDemo():
         self.function = Function()
         self.ModemSerialList=["Choose"]
         self.GPSSerialList=["choose"]
-        self.ModemList=["Choose"]
+        self.ModemList=self.function.GetModemList()
         self.ModemCommandList=[]
         self.ModemCommandListState=[]
         #master.minsize(width=666, height=666)
@@ -114,7 +114,7 @@ class GUIDemo():
     def createModemChooseButton(self,frame,myrow,mycolumn):
         self.Modemchoosestate = StringVar(frame)
         self.Modemchoosestate.set(self.ModemList[0]) # default value
-        self.Modemchoosemenu =  OptionMenu(frame, self.Modemchoosestate, self.ModemList, command = self.Modemchooseevent )
+        self.Modemchoosemenu =  OptionMenu(frame, self.Modemchoosestate, *self.ModemList, command = self.Modemchooseevent )
         self.Modemchoosemenu.grid(row=myrow, column=mycolumn+1)
         
         
@@ -306,6 +306,7 @@ class GUIDemo():
         """
         self.ModemDebugButton['state']='normal'
         print value,self.Modemchoosestate.get()
+        self.function.SetModem(self.Modemchoosestate.get())
        
         
         self.displayText["text"] = "Modemchooseevent"  + str(self.Modemchoosestate.get())

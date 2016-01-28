@@ -38,3 +38,5 @@ class GPSCommand():
         """
         self.UpdateRate = rate
        
+    
+   

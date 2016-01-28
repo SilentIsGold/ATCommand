@@ -24,6 +24,7 @@ class Function():
         self.ModemLogFile=None
         self.AutoSendStop=False
         self.AutoSendTimeInterval=1 #second
+        self.ModemCommandList=[]
 
     def SetLog(self,state):
         if state ==1 :
@@ -62,7 +63,7 @@ class Function():
         #self.modem.GetModemCommandList
         CommandList=[1,2,3,4,5,6,7]
         print "function ",self.AutoSendTimeInterval
-        return self.AutoSendTimeInterval*1000, CommandList
+        return self.AutoSendTimeInterval*1000, self.ModemCommandList
         pass
         
     def SetModemSerialPort(self,port):
@@ -77,6 +78,13 @@ class Function():
         
         pass
     
+    def GetModemList(self):
+        return self.modem.GetModemList()
+        
+    def SetModem(self,modem):
+        self.ModemCommandList[:]=[]
+        self.ModemCommandList=self.modem.SetChooseModem(modem)
+        
     def GetModemSerialPort(self):
         """Get Modem serial list
         """
