@@ -76,7 +76,7 @@ class GUIDemo():
     def createLogButton(self):
         myrow=0
         self.logstate = IntVar()
-        self.logbutton = Checkbutton(self.top_frame, text="Log Data", variable=self.logstate)
+        self.logbutton = Checkbutton(self.top_frame, text="Log Data", variable=self.logstate,command = self.Logevent)
         self.logbutton.grid(row=2, column=0)
         
         self.logconfig = Button(self.top_frame, text="Log Config", command = self.Logconfigevent)
@@ -161,6 +161,10 @@ class GUIDemo():
         self.scroll.grid(row=0, column=7, sticky='Ens')
         self.function.SetScrollText(self.txt)
     def Logevent(self):
+        
+        self.function.SetLog(self.logstate.get())
+        
+        self.displayText["text"] = "Logevent" + str(self.logstate.get())
         pass
     
     def Logconfigevent(self):

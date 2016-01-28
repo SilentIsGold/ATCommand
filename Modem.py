@@ -1,5 +1,5 @@
 import time
-import sys
+import sys,os
 import glob
 from datetime import datetime
 
@@ -14,14 +14,25 @@ class ModemCommand():
         ModemConfList is the conf file for support command list
         ChooseModem is choosen modem to use
         """
-        self.ModemVailList = ["Huawei E3372"]
-        self.ModemConfList = {"Huawei E3372":"HuaweiE3372.conf"}
-        self.ChooseModem = self.ModemVailList[0]
-
+        self.ModemVailList = []
+        self.ModemConfList = {}
+        self.ChooseModem = None
+        
+        self.GetModemList()
     
     def GetModemList(self):
         """Return support modem
         """
+        for company in os.listdir('.//Modem'):
+            print company
+            for modem in os.listdir('.//Modem//'+company):
+                print modem
+                modemName = modem.split('.')
+                self.ModemVailList.append(company+modemName[0])
+                self.ModemConfList[company+modemName[0]] = company+modem
+                print self.ModemVailList, self.ModemConfList
+        
+        
         return self.ModemVailList
     
     def SetChooseModem(self,modem):
@@ -41,3 +52,4 @@ class ModemCommand():
         """
         pass    
        
+    

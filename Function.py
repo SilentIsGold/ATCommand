@@ -7,6 +7,7 @@ from Serial import Serialport
 from Modem import ModemCommand 
 from Serial import Serialport
 from GPS import GPSCommand
+from datetime import datetime
 from  Tkinter import *
 
 count =0
@@ -19,19 +20,34 @@ class Function():
         self.GPSserial = Serialport()
         self.modem = ModemCommand()
         self.gps = GPSCommand()
+        self.ModemLogState=False
+        self.ModemLogFile=None
         self.AutoSendStop=False
         self.AutoSendTimeInterval=1 #second
 
+    def SetLog(self,state):
+        if state ==1 :
+            self.ModemLogState = True
+            myUTCtime = datetime.strftime(datetime.utcnow(),'%Y-%m-%d %H-%M-%S')
+            self.ModemLogFile = open(myUTCtime,"w")
+        else:
+            self.ModemLogState = False
+            if self.ModemLogFile != None :
+                self.ModemLogFile.close()
+                self.ModemLogFile = None
+        print self.ModemLogState
     def SetScrollText(self,frame):
         self.txt=frame
 
 
     def SetLogConfig(self):
+        #TODO
         """Write info into LogConfig
         """
         return 
     
     def GetLogConfig(self):
+        #TODO
         """Read info from LogConfig
         """
 
@@ -100,13 +116,21 @@ class Function():
         
         self.txt.insert(END,"UserInput:"+mess+"\nOutput:"+output+"\r\n")
         self.txt.yview(END)
+        
+        if self.ModemLogFile != None:
+            myUTCtime = datetime.strftime(datetime.utcnow(),'%Y-%m-%d %H-%M-%S')
+            self.ModemLogFile,write(myUTCtime+":"+output+"\r\n")
+        
         #return "UserInput:"+mess+"\nOutput:"+output+"\r\n"
 
     def AutoSendThread(self):
         while not self.AutoSendStop:
             output = self.commandserial.SendSerialCommand(mess)
-        
+                    
             self.txt.insert(END,"UserInput:"+mess+"\nOutput:"+output+"\r\n")
             self.txt.yview(END)
+            if self.ModemLogFile != None:
+                myUTCtime = datetime.strftime(datetime.utcnow(),'%Y-%m-%d %H-%M-%S')
+                self.ModemLogFile,write(myUTCtime+":"+output+"\r\n")
             time.sleep(self.AutoSendTimeInterval)   
             pass
