@@ -89,7 +89,7 @@ class GUIDemo():
         
     def createAutoSendButton(self):
         self.autosendstate = IntVar()
-        self.autosend = Checkbutton(self.top_frame, text="AutoSend", variable=self.autosendstate)
+        self.autosend = Checkbutton(self.top_frame, text="AutoSend", variable=self.autosendstate, command = self.Autosendevent)
         self.autosend.grid(row=2, column=1)
         
         self.autosendconfig = Button(self.top_frame, text="AutoSend Config", command = self.Autosendconfigevent)
@@ -204,15 +204,22 @@ class GUIDemo():
         pass
     
     def Autosendevent(self):
+        print self.autosendstate.get()
+        self.function.SetAutoSendState(self.autosendstate.get())
         pass
     
     def Autosendconfigevent(self):
+        """Set time interval, and command list. will del the old history command list
+        """
         timeinterval, CommandList = self.function.GetAutoSendConfig()
-        
+        print timeinterval, CommandList
+        #change autosend to stop
+        self.autosendstate.set(0)
+        self.function.SetAutoSendState(0)
         
         myrow=0
         self.Autosendpopwindows=Toplevel()
-        self.Autosendpopwindows.title("Log Config")
+        self.Autosendpopwindows.title("Auto Config")
         msg = Label(self.Autosendpopwindows, text="AutoSend configure window")
         msg.grid(row=myrow, column=0)
         myrow+=1
@@ -230,9 +237,11 @@ class GUIDemo():
         myrow+=1
         self.AutoSendMB.menu = Menu ( self.AutoSendMB, tearoff = 0 )
         self.AutoSendMB["menu"] = self.AutoSendMB.menu
-        self.ModemCommandList[:]=[]
-        self.ModemCommandList= CommandList
-        self.ModemCommandListState[:]=[]
+        
+        del self.ModemCommandList[:]
+        
+        self.ModemCommandList[:]= CommandList[:]
+        del self.ModemCommandListState[:]
         for i in range(len(CommandList)):
             self.ModemCommandListState.append(IntVar())
             self.AutoSendMB.menu.add_checkbutton (label=self.ModemCommandList[i],variable=self.ModemCommandListState[i],command=lambda choice=i: self.ModemCommandListChoose(choice))
@@ -295,8 +304,9 @@ class GUIDemo():
         self.Modemserialportmenu['menu'].delete(0, 'end')
         for choice in self.ModemSerialList:
             #self.Modemserialchoosestate.set(choice)
-            self.Modemserialportmenu['menu'].add_command(label=choice, command=lambda v=choice: self.Modemserialchoosestate.set(v) )
+            #self.Modemserialportmenu['menu'].add_command(label=choice, command=lambda v=choice: self.Modemserialchoosestate.set(v) )
             #self.Modemserialportmenu['menu'].add_command(label=choice, command=self.ModemSerialchooseevent )
+            self.Modemserialportmenu['menu'].add_command(label=choice, command=lambda v=choice: self.ModemSerialchooseevent(v) )
         #self.Modemserialportmenu['command']=self.ModemSerialchooseevent
         
         self.displayText["text"] = "ModemSerialrefreshevent" + str(self.ModemSerialList) + str(self.Modemserialchoosestate.get())
@@ -305,9 +315,9 @@ class GUIDemo():
         """User choose a serial port
         """
         print value,self.Modemserialchoosestate.get()
-        self.function.SetModemSerialPort(self.Modemserialchoosestate.get())
+        self.function.SetModemSerialPort(value)
         
-        self.displayText["text"] = "ModemSerialchooseevent" + str(self.ModemSerialList) + str(self.Modemserialchoosestate.get())
+        self.displayText["text"] = "ModemSerialchooseevent" + str(self.ModemSerialList) + str(value)
         pass
     
     def Modemchooseevent(self,value=0):
@@ -353,13 +363,13 @@ class GUIDemo():
         """
         self.GPSSerialList[:]=[] #refres list
         self.GPSSerialList = self.function.GetSerialPort()
-        
+        print self.GPSSerialList
         #update the optionbutton
         self.GPSserialportmenu['menu'].delete(0, 'end')
         for choice in self.GPSSerialList:
             #self.GPSserialchoosestate.set(choice)
-            self.Modemserialportmenu['menu'].add_command(label=choice, command=lambda v=choice: self.serialchoose.set(v) )
-            #self.GPSserialportmenu['menu'].add_command(label=choice, command=self.GPSSerialchooseevent )
+            #self.GPSserialportmenu['menu'].add_command(label=choice, command=lambda v=choice: self.GPSserialchoosestate.set(v) )
+            self.GPSserialportmenu['menu'].add_command(label=choice, command=lambda v=choice: self.GPSSerialchooseevent(v) )
         #self.Modemserialportmenu['command']=self.ModemSerialchooseevent
         
         self.displayText["text"] = "ModemSerialrefreshevent" + str(self.GPSSerialList) + str(self.GPSserialchoosestate.get())
@@ -368,9 +378,9 @@ class GUIDemo():
         """User choose a GPS serial port
         """
         print value,self.GPSserialchoosestate.get()
-        self.function.SetGPSSerialPort(self.GPSserialchoosestate.get())
+        self.function.SetGPSSerialPort(value)
         
-        self.displayText["text"] = "GPSSerialchooseevent" + str(self.GPSSerialList) + str(self.GPSserialchoosestate.get())
+        self.displayText["text"] = "GPSSerialchooseevent" + str(self.GPSSerialList) + str(value)
         pass
         
     def Uploadevent(self):
@@ -453,7 +463,9 @@ class GUIDemo():
         pass
     
     def ModemCommandListChoose(self,i):
-        self.ModemCommandListState[3].set(1)
+        
+        #self.ModemCommandListState[3].set(1)
+        self.function.SetAutoSendCommand(self.ModemCommandList[i],self.ModemCommandListState[i].get())
         print self.ModemCommandList[i],i,self.ModemCommandListState[i].get()
     
     def Modemdebugevent(self):

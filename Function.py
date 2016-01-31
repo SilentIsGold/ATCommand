@@ -1,7 +1,7 @@
 import time
 import sys
 import glob
-import thread
+import threading
 from datetime import datetime
 from Serial import Serialport
 from Modem import ModemCommand 
@@ -23,13 +23,20 @@ class Function():
         
         self.GPSLogState = False
         self.GPSLogFile = None
+        self.GPSThread=None
         
         self.ModemLogState=False
         self.ModemLogFile=None
+        self.ModemThread=None
         
-        self.AutoSendStop=False
+        self.AutoSendState=None
+        self.AutoCommandList={}
+
         self.AutoSendTimeInterval=1 #second
         self.ModemCommandList=[]
+        
+        
+        
 
     def SetModemLog(self,state):
         """log the modem and the gps same time
@@ -41,16 +48,38 @@ class Function():
             self.ModemLogFile = open(".//Log//"+myUTCtime+"-"+modem,"w")
             if self.GPSLogState:
                 self.GPSLogFile = open(".//Log//"+myUTCtime+"-GPS","w")
+                print "start gps thread"
+                self.GPSThread=threading.Thread(target=self.GPSLogThread)
+                self.GPSThread.start()
         else:
             self.ModemLogState = False
             if self.ModemLogFile != None :
+
                 self.ModemLogFile.close()
                 self.ModemLogFile = None
+
                 print "Close Modem Log file"
         print self.ModemLogState
     def SetScrollText(self,frame):
         self.txt=frame
 
+    def SetAutoSendState(self, state):
+        """Set AutoSendState
+        """
+        if state == 1:
+            self.AutoSendState =True
+            if len(self.AutoCommandList.keys() )==0:
+                raise EnvironmentError('No command choosen')
+            print self.AutoCommandList.keys()
+            self.AutoThread=threading.Thread(target=self.AutoSendThread)
+            self.AutoThread.start()
+            
+        else:
+            self.AutoSendState =False
+            self.AutoCommandList.clear()
+        
+        
+        
     def SetGPSLog(self,state):
         """only set the GPS state and close the file
         """
@@ -85,7 +114,7 @@ class Function():
         """
         #self.modem.GetModemCommandList
         CommandList=[1,2,3,4,5,6,7]
-        print "function ",self.AutoSendTimeInterval
+        print "function ",self.ModemCommandList
         return self.AutoSendTimeInterval*1000, self.ModemCommandList
         pass
         
@@ -114,6 +143,7 @@ class Function():
     def SetModem(self,modem):
         """Set which modem will be use
         """
+        print "SetModem"
         self.ModemCommandList[:]=[]
         self.ModemCommandList=self.modem.SetChooseModem(modem)
         
@@ -148,7 +178,19 @@ class Function():
         """Read info from UploadConfig
         """
         pass
-       
+    
+    def SetAutoSendCommand(self,command,state):
+        """Set which command will be auto 
+        """
+        if command in self.AutoCommandList:
+            if state == 0:
+                del self.AutoCommandList[command]
+        else:
+            if state ==1:
+                self.AutoCommandList[command]=state
+        print self.AutoCommandList
+        
+   
     def SetUserInPut(self,mess):
         """Send the input to the serial port
         """
@@ -159,18 +201,29 @@ class Function():
         
         if self.ModemLogFile != None:
             myUTCtime = datetime.strftime(datetime.utcnow(),'%Y-%m-%d %H-%M-%S')
-            self.ModemLogFile,write(myUTCtime+":"+output+"\r\n")
+            self.ModemLogFile.write(myUTCtime+":"+output+"\r\n")
         
         #return "UserInput:"+mess+"\nOutput:"+output+"\r\n"
 
+    def GPSLogThread(self):
+        """log the gps data from serial by threading
+        """
+        
+        while  self.GPSLogState and self.ModemLogState :
+            #print "in thread"
+            output = self.GPSserial.GetSerialReadline()
+            #print output
+            self.GPSLogFile.write(output)
+        
     def AutoSendThread(self):
-        while not self.AutoSendStop:
-            output = self.commandserial.SendSerialCommand(mess)
-                    
-            self.txt.insert(END,"UserInput:"+mess+"\nOutput:"+output+"\r\n")
-            self.txt.yview(END)
-            if self.ModemLogFile != None:
-                myUTCtime = datetime.strftime(datetime.utcnow(),'%Y-%m-%d %H-%M-%S')
-                self.ModemLogFile,write(myUTCtime+":"+output+"\r\n")
+        while self.AutoSendState:
+            for mess in self.AutoCommandList.keys():
+                output = self.commandserial.SendSerialCommand(mess)
+                        
+                self.txt.insert(END,"UserInput:"+mess+"\nOutput:"+output+"\r\n")
+                self.txt.yview(END)
+                if self.ModemLogFile != None:
+                    myUTCtime = datetime.strftime(datetime.utcnow(),'%Y-%m-%d %H-%M-%S')
+                    self.ModemLogFile.write(myUTCtime+":"+output+"\r\n")
             time.sleep(self.AutoSendTimeInterval)   
             pass

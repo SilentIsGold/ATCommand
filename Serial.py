@@ -13,14 +13,11 @@ class Serialport():
     def __init__(self):
         
         self.SerialPortList= []
-        self.SerialPortUsed = ""
+        self.SerialPortUsed = None
         self.SerialPort=None
         #self.SendInterval = 1
         self.Modem=None
-        self.ModemLogFileName = ""
-        self.ModemLogPath = "./"
-        self.GPSLogFileName = ""
-        self.GPSLogPath="./"
+
         
         self.DetectPlatformOS()
      
@@ -62,10 +59,14 @@ class Serialport():
     def SetSerialPort(self, port,baudrate=9600):
         """Set serial port to use modem
         """
+        if self.SerialPortUsed != None:
+            self.SerialPort.close()
+
         self.SerialPortUsed = port
         self.SerialPort = serial.Serial(port,baudrate,timeout=0)
         self.SerialPort.close()
         self.SerialPort.open()
+        print "set port",port
     
     def GetSerialPortList(self):
         """return available Serial port
@@ -73,10 +74,13 @@ class Serialport():
         self.FindSerialPort()
         return self.SerialPortList
         
+    def GetSerialReadline(self):
+        return self.SerialPort.readline()
+    
     def SendSerialCommand(self,command):
         """Send Serial command to serial port
         """
-        if self.SerialPortUsed != "":
+        if self.SerialPortUsed != None:
             self.SerialPort.write(command)
             #time.sleep(self.SendInterval)   
             return self.SerialPort.read(size=100)
@@ -93,6 +97,7 @@ class Serialport():
         :returns:
             A list of the serial ports available on the system
         """
+        self.SerialPortList[:]=[]
         if self.Platform == "win":
             ports = ['COM%s' % (i + 1) for i in range(256)]
         elif self.Platform == "linux":
@@ -103,7 +108,7 @@ class Serialport():
         else:
             raise EnvironmentError('Unsupported platform')
 
-        print ports
+        #print ports
         for port in ports:
             try:
                 s = serial.Serial(port)
