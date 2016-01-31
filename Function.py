@@ -20,26 +20,49 @@ class Function():
         self.GPSserial = Serialport()
         self.modem = ModemCommand()
         self.gps = GPSCommand()
+        
+        self.GPSLogState = False
+        self.GPSLogFile = None
+        
         self.ModemLogState=False
         self.ModemLogFile=None
+        
         self.AutoSendStop=False
         self.AutoSendTimeInterval=1 #second
         self.ModemCommandList=[]
 
-    def SetLog(self,state):
+    def SetModemLog(self,state):
+        """log the modem and the gps same time
+        """
         if state ==1 :
             self.ModemLogState = True
             myUTCtime = datetime.strftime(datetime.utcnow(),'%Y-%m-%d %H-%M-%S')
-            self.ModemLogFile = open(myUTCtime,"w")
+            modem = self.modem.GetModemName()
+            self.ModemLogFile = open(".//Log//"+myUTCtime+"-"+modem,"w")
+            if self.GPSLogState:
+                self.GPSLogFile = open(".//Log//"+myUTCtime+"-GPS","w")
         else:
             self.ModemLogState = False
             if self.ModemLogFile != None :
                 self.ModemLogFile.close()
                 self.ModemLogFile = None
+                print "Close Modem Log file"
         print self.ModemLogState
     def SetScrollText(self,frame):
         self.txt=frame
 
+    def SetGPSLog(self,state):
+        """only set the GPS state and close the file
+        """
+        if state ==1 :
+            self.GPSLogState = True
+        else:
+            self.GPSLogState = False
+            if self.GPSLogFile != None :
+                self.GPSLogFile.close()
+                self.GPSLogFile = None
+                print "Close GPS Log file"
+        print self.GPSLogState
 
     def SetLogConfig(self):
         #TODO
@@ -72,6 +95,11 @@ class Function():
         self.commandserial.SetSerialPort(port)
         pass
     
+    def SetGPSSerialPort(self,port):
+        """Set the GPS serial port
+        """
+        self.GPSserial.SetSerialPort(port)
+    
     def SetModemConfig(self):
         pass
     def GetModemConfig(self):
@@ -79,9 +107,13 @@ class Function():
         pass
     
     def GetModemList(self):
+        """return the supporeted modem list
+        """
         return self.modem.GetModemList()
         
     def SetModem(self,modem):
+        """Set which modem will be use
+        """
         self.ModemCommandList[:]=[]
         self.ModemCommandList=self.modem.SetChooseModem(modem)
         

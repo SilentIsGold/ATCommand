@@ -120,8 +120,13 @@ class GUIDemo():
         
         
     def createGPSButton(self):
-        self.gps = Button(self.top_frame, text = "GPS Config", command = self.GPSevent)
-        self.gps.grid(row=2, column=3)
+        
+        self.logGPSstate = IntVar()
+        logFileText = Checkbutton(self.top_frame,text="Log GPS file", variable=self.logGPSstate,command = self.GPSlogevent)
+        logFileText.grid(row=2,column=3)
+        
+        self.gps = Button(self.top_frame, text = "GPS Config", command = self.GPSConfigevent)
+        self.gps.grid(row=3, column=3)
         
         #self.top.append(Toplevel())
         #self.top[0].geometry("%dx%d%+d%+d" % (300, 200, 250, 125))
@@ -161,8 +166,12 @@ class GUIDemo():
         self.scroll.grid(row=0, column=7, sticky='Ens')
         self.function.SetScrollText(self.txt)
     def Logevent(self):
-        
-        self.function.SetLog(self.logstate.get())
+        """handle the modem log state. if the log state=0, then close the gps log as well
+        """
+        if self.logstate.get()==0:
+            self.logGPSstate.set(0)
+            self.GPSlogevent()
+        self.function.SetModemLog(self.logstate.get())
         
         self.displayText["text"] = "Logevent" + str(self.logstate.get())
         pass
@@ -311,7 +320,14 @@ class GUIDemo():
         
         self.displayText["text"] = "Modemchooseevent"  + str(self.Modemchoosestate.get())
     
-    def GPSevent(self):
+    def GPSlogevent(self):
+        """Log the GPS data only after the log data is activated
+        """
+        self.function.SetGPSLog(self.logGPSstate.get())
+        
+        self.displayText["text"] = "Logevent" + str(self.logGPSstate.get())
+    
+    def GPSConfigevent(self):
         myrow=0
         self.GPSpopwindows=Toplevel()
         self.GPSpopwindows.title("Log Config")
@@ -322,11 +338,7 @@ class GUIDemo():
         self.createGPSSerialButton(self.GPSpopwindows,myrow,0)
         myrow+=1
         
-        self.logGPSstate = IntVar()
-        logFileText = Checkbutton(self.GPSpopwindows,text="Log GPS file", variable=self.logGPSstate)
-        logFileText.grid(row=myrow,column=0)
-        myrow+=1
-        
+
         button = Button(self.GPSpopwindows, text="Cancel", command=self.GPSpopwindows.destroy)
         button.grid(row=myrow, column=1)
         
@@ -356,7 +368,7 @@ class GUIDemo():
         """User choose a GPS serial port
         """
         print value,self.GPSserialchoosestate.get()
-        #self.function.SetModemSerialPort(self.Modemserialchoosestate.get())
+        self.function.SetGPSSerialPort(self.GPSserialchoosestate.get())
         
         self.displayText["text"] = "GPSSerialchooseevent" + str(self.GPSSerialList) + str(self.GPSserialchoosestate.get())
         pass

@@ -1,5 +1,5 @@
 import time
-import sys,os
+import sys,os,re
 import glob
 from datetime import datetime
 
@@ -36,6 +36,10 @@ class ModemCommand():
         
         
         return self.ModemConfList.keys()
+    def GetModemName(self):
+        """return choosen modem name
+        """
+        return self.ChooseModem
     
     def SetChooseModem(self,modem):
         """set  modem to use
@@ -67,11 +71,12 @@ class ModemCommand():
                     #is comment
                     continue
                 command = line[0]
-                response = line[1].split("'")[1]
-                
+                response = line[1]#.split(",")
+                response = re.split(r'[,\n]',response)
+                response = filter(None, response)#remove empty string
                 if command == "TAG":
-                    list = response.split(',')
-                    for value in list:
+                    #list = response.split(',')
+                    for value in response:
                         self.TAGList.append(value)
                 else:
                     self.CommandList[command]=response
