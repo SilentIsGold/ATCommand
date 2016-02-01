@@ -13,6 +13,8 @@ class GUIDemo():
         self.ModemList=self.function.GetModemList()
         self.ModemCommandList=[]
         self.ModemCommandListState=[]
+        self.UploadFileList=[]
+        self.UploadFileListState=[]
         #master.minsize(width=666, height=666)
         
         self.myParent = master
@@ -384,7 +386,7 @@ class GUIDemo():
         pass
         
     def Uploadevent(self):
-        
+        self.function.GetUploadConfig()
         
         self.displayText["text"] = "Uploadevent" 
         pass
@@ -392,24 +394,26 @@ class GUIDemo():
     def Uploadconfigevent(self):
         myrow=0
         self.Uploadpopwindows=Toplevel()
-        self.Uploadpopwindows.title("Log Config")
+        self.Uploadpopwindows.title("Upload Config")
         msg = Label(self.Uploadpopwindows, text="Upload configure window")
         msg.grid(row=myrow, column=0)
         myrow+=1
         
-        uploadUserText = Label(self.Uploadpopwindows,text="UserName")
-        uploadUserText.grid(row=myrow,column=0)
-        
-        self.uploadUserField = Entry(self.Uploadpopwindows,width=15)
-        self.uploadUserField.grid(row=myrow,column=1)
+        self.UploadMB=Menubutton ( self.Uploadpopwindows, text="Upload File List", relief=RAISED )
+        self.UploadMB.grid(row=myrow, column=0)
         myrow+=1
+        self.UploadMB.menu = Menu ( self.UploadMB, tearoff = 0 )
+        self.UploadMB["menu"] = self.UploadMB.menu
         
-        uploadEmailText = Label(self.Uploadpopwindows, text="User Email")
-        uploadEmailText.grid(row=myrow,column=0)
+        del self.UploadFileListState[:]
+        del self.UploadFileListState[:]
+        self.UploadFileList= self.function.GetUploadFileList()
         
-        uploadEmailField = Entry(self.Uploadpopwindows,width=30)
-        uploadEmailField.grid(row=myrow,column=1)
-        myrow+=1
+        for i in range(len(self.UploadFileList)):
+            self.UploadFileListState.append(IntVar())
+            self.UploadMB.menu.add_checkbutton (label=self.UploadFileList[i],variable=self.UploadFileListState[i],command=lambda choice=i: self.UploadFileListChoose(choice))
+            
+
         
         button = Button(self.Uploadpopwindows, text="Cancel", command=self.Uploadpopwindows.destroy)
         button.grid(row=myrow, column=1)
@@ -419,6 +423,12 @@ class GUIDemo():
         
 
         self.displayText["text"] = "Uploadconfigevent" 
+        pass
+    
+    def UploadFileListChoose(self,value):
+        
+        self.function.SetUploadFile(self.UploadFileList[value],self.UploadFileListState[value].get())
+        print self.UploadFileList[value],value,self.UploadFileListState[value].get()
         pass
     
     def Enterevent(self):

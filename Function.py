@@ -2,6 +2,7 @@ import time
 import sys
 import glob
 import threading
+import ftplib,os
 from datetime import datetime
 from Serial import Serialport
 from Modem import ModemCommand 
@@ -35,6 +36,8 @@ class Function():
         self.AutoSendTimeInterval=1 #second
         self.ModemCommandList=[]
         
+        self.UploadConfigList={}
+        self.UploadFileList={}
         
         
 
@@ -177,7 +180,59 @@ class Function():
     def GetUploadConfig(self):
         """Read info from UploadConfig
         """
+        self.UploadConfigList.clear()
+        file = open('.//Setting//Upload.conf','r')
+        
+        for line in file.read().splitlines():
+            content = line.split(':')
+            self.UploadConfigList[content[0]] = content[1]
+            #print line
+        return self.UploadConfigList
+        
         pass
+    
+    def GetUploadFileList(self):
+        """Get the available upload file list
+        """
+        filelist = []
+        for file in os.listdir('.//Log'):
+            if not ( file.endswith('GPS') or file.endswith('-Uploaded') ):
+                filelist.append(file)
+                #print file
+        return filelist
+        pass
+    
+    def UploadFile(self):
+        """upload the file to the server
+        """
+        UploadConfig = self.GetUploadConfig()
+        
+        #session = ftplib.FTP(UploadConfig['Server IP'],UploadConfig['Server ID'],UploadConfig['Server PW'])
+        ftp = ftplip.FTP()
+        ftp.connect(UploadConfig['Server IP'], port)
+        print ftp.getwelcome()
+        try:
+            print "Logging in..."
+            ftp.login("login", "password")
+        except:
+            "failed to login"
+        for filename in self.UploadFileList.keys():
+            
+            file = open('.//Log//'+filename,'rb')                  # file to send
+            session.storbinary(filename, file)     # send the file
+            file.close()                                    # close file and FTP
+            session.quit()
+    
+    def SetUploadFile(self,command,state):
+        """set which file will be uploaded
+        """
+        if command in self.UploadFileList:
+            if state == 0:
+                del self.UploadFileList[command]
+        else:
+            if state ==1:
+                self.UploadFileList[command]=state
+        print self.UploadFileList
     
     def SetAutoSendCommand(self,command,state):
         """Set which command will be auto 
