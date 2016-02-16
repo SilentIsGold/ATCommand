@@ -21,6 +21,7 @@ class ModemCommand():
         #self.GetModemList()
         self.TAGList=[]
         self.CommandList={}
+        self.CommandResultList={}
     
     def GetModemList(self):
         """Return support modem
@@ -48,7 +49,7 @@ class ModemCommand():
         self.TAGList[:]=[]
         self.CommandList.clear()
         self.GetModemCommandList(self.ModemConfList[self.ChooseModem])
-        return self.CommandList.keys()
+        return self.CommandList
 
     # def GetModemCommandList(self):
         # """Return available modem command
@@ -61,10 +62,18 @@ class ModemCommand():
         """For those modem that need to special command to enter debug mode
         """
         pass    
-       
+    
+    def GetCommandResultList(self):
+        """Get the choose modem's command result list
+        """
+        return self.CommandResultList
+    
     def GetModemCommandList(self,FilePath):
+        """Get the modem command list from the conf
+        """
         with open(FilePath) as file:
             for line in file.readlines():
+                line = line.strip() 
                 line = line.split(' ') 
                 print line
                 if len(line) == 1 or line[0].startswith("#"):
@@ -80,4 +89,5 @@ class ModemCommand():
                         self.TAGList.append(value)
                 else:
                     self.CommandList[command]=response
-            print self.CommandList        
+                    self.CommandResultList[response[0]]=response[1:]
+            print self.CommandList, self.CommandResultList
