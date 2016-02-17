@@ -387,7 +387,7 @@ class GUIDemo():
         
     def Uploadevent(self):
         self.function.GetUploadConfig()
-        
+        self.function.UploadFile()
         self.displayText["text"] = "Uploadevent" 
         pass
        

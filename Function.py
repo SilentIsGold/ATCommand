@@ -1,8 +1,9 @@
 import time
 import sys
 import glob
-import threading
-import ftplib,os
+import threading,json
+import ftplib
+import os
 from datetime import datetime
 from Serial import Serialport
 from Modem import ModemCommand 
@@ -20,7 +21,7 @@ class Function():
         self.commandserial = Serialport()
         self.GPSserial = Serialport()
         self.modem = ModemCommand()
-        self.gps = GPSCommand()
+        self.GPSControll = GPSCommand()
         
         self.GPSLogState = False
         self.GPSLogFile = None
@@ -209,7 +210,8 @@ class Function():
         SignalFileList = self.UploadFileList.keys()
         
         for file in SignalFileList:
-            GPSFIle = slef.CheckGPS()
+            print 'ParseFileToJson with file:',file
+            GPSFIle = self.CheckGPS(file)
             self.ToJson(file,GPSFIle)
             
     
@@ -217,15 +219,13 @@ class Function():
         """parse the signal and gps into one json file
         assume the gps log and signal are both as same timestamp formate 
         """
-        if gps==None:
-            GPSFile=None
-            GPSLines=None
-            gpsstate=0
-        else:
-            GPSFIle=open(".//Upload//"+gps,"r")
+        GPSFile=None
+        GPSLines=None
+        if gps!=None:
+            GPSFile=open(".//Upload//"+gps,"r")
             #GPSLines=GPSFile.readlines()
             gpsstate=1
-        SignalFile = open('.//Log//'+signal,'r')
+        #SignalFile = open('.//Log//'+signal,'r')
         #SignalLines=SignalFile.readlines()
         
         WriteFile = open('.//Upload//'+signal,'w')
@@ -237,63 +237,119 @@ class Function():
         jsonElement={}
         
         with open('.//Log//'+signal) as SignalFile:
+            
             CommandResultList = self.modem.GetCommandResultList()#TODO need to dynamic change the modem 
-            for SignalLine in fp:
-                if len(SignalLine) >15:
+            print 'open ',signal,CommandResultList
+            for SignalLine in SignalFile:
+                #print SignalLine
+                if len(SignalLine) >15:#remove empty line
                     SignalLine = SignalLine.strip() 
                     SignalLine=SignalLine.replace(':',',')
                     line=SignalLine.split(',')#first is timestamp,second is command, other is result
-                    if line[1] not in CommandResultList:
+                    if line[1] not in CommandResultList or len(line)<3:
                         #if is not a command result, pass to next one
                         continue
                     if timestamp == None:
+                        #initial the time stamp
                         jsonElement.clear()
-                        jsonElement["AppicationType"]=self.commandserial.GetPlatformOS()
-                        jsonElement["ApplicationVersion"]=self.Version
-                        jsonElement["Account"]='this is pc'
-                        timestamp= long(line[0]) #get inisceond
+                        jsonElement=self.JsonReset()
+                        #print jsonElement
+                        timestamp= long(float(line[0])) #get minisceond
                         if GPSFile!=None:
+                            #if GPS is available, check the time is correct or not
                             GPSLine=GPSFile.readline()
                             GPSLine=GPSLine.split(',')
-                            GPStime = long(GPSLine[0])/1000
+                            GPStime = long(float(GPSLine[0]))/1000#use second to divide the data,not minisceond
+                            #print 'GPS time=',GPStime
                             while timestamp/1000 > GPStime:
+                                # if the GPS time is less than signal. then search the right one
                                 GPSLine=GPSFile.readline()
                                 if not GPSLine:#end of file, no data
                                     GPSFile.close()
                                     GPSFile=None
+                                    GPSLine=None
                                     break
                                 GPSLine=GPSLine.split(',')
-                                GPStime = long(GPSLine[0])/1000
+                                GPStime = long(float(GPSLine[0]))/1000
                     
-                    if long(line[0]) != timestamp:#next timestamp
+                    if long(float(line[0]))/1000 != timestamp/1000:#next timestamp
                         timestamp=long(line[0])
                         jsonArray.append(jsonElement.copy())
                         jsonElement.clear()
-                        jsonElement["AppicationType"]=self.commandserial.GetPlatformOS()
-                        jsonElement["ApplicationVersion"]=self.Version
-                        jsonElement["Account"]='this is pc'
+                        jsonElement=self.JsonReset()
                     
                     
                     command = CommandResultList[line[1]] #todo need to dynamic detect the right command list, now only get the choose one
                     
-                    print line
-                
+                    jsonElement['Time']=timestamp
+                    for index, response in enumerate(command):
+                        #index start with 0
+                        if line[index+2]=='D':
+                            #don't care
+                            continue
+                        if response in jsonElement['CellularInfo'][0]:
+                            jsonElement['CellularInfo'][0][response]=line[index+2]
+                        else:
+                            jsonElement['other'][0][response]=line[index+2]
+                    
+                    if GPSFile != None:
+                        #if GPS is available, check the time is correct or not
+                        #print timestamp/1000,GPStime
+                        while timestamp/1000 > GPStime:
+                            # if the GPS time is less than signal. then search the right one
+                            GPSLine=GPSFile.readline()
+                            if not GPSLine:#end of file, no data
+                                GPSFile.close()
+                                GPSFile=None
+                                GPStime=None
+                                break
+                            GPSLine=GPSLine.split(',')
+                            GPStime = long(float(GPSLine[0]))/1000
+                        
+                        if timestamp/1000 == GPStime:#check if is in the same sceond.  don't care minisceond
+                            jsonElement['Lat']=GPSLine[1]
+                            jsonElement['Lng']=GPSLine[3]
+                            
+                        
+                    #print line
+                    
+        jsonArray.append(jsonElement.copy())     #last data       
+        json.dump(jsonArray, WriteFile)        
         
         #SignalFile.close()
         WriteFile.close()
-        if GPSFIle:
+
+        if GPSFile != None:
+
             GPSFile.close()
-        os.rename('.//Log//'+signal,'.//Log//'+signal+'-Uploaded')
-        
-    def CheckGPS(slef,file):
+        #os.rename('.//Log//'+signal,'.//Log//'+signal+'-Uploaded')
+    
+    def JsonReset(self):
+        jsonElement={}
+        jsonElement.clear()
+        seq = ("AppicationType", "ApplicationVersion", "Account","IMEI","Lat", "Lng","CellularInfo","other")
+        jsonElement=dict.fromkeys(seq)
+        jsonElement["AppicationType"]=self.commandserial.GetPlatformOS()
+        jsonElement["ApplicationVersion"]=self.Version
+        jsonElement["Account"]='this is pc'
+        jsonElement["CellularInfo"]=[]
+        cellseq=( "Time","CellID","CellMCC","CellMNC","CellPCI","CellTAC","RSSI","SINR","RSRQ","RSRP")
+        cell=dict.fromkeys(cellseq)
+        jsonElement["CellularInfo"].append(cell)
+        jsonElement["other"]=[]
+        jsonElement["other"].append({})
+        return jsonElement
+    
+    def CheckGPS(self,file):
         """check the upload file need gps or not
         """
         
         lasttag=file.rfind('-')
-        GPSfile=file[:lasttag]+'GPS'
-        for gps in os.listdir('.//Log'):
-            if gps==GPSfile:
-                self.gps.ValidGPSFile(gps)
+        GPSfile=file[:lasttag]+'-GPS'
+        print 'CheckGPS with ',GPSfile
+        for gpslist in os.listdir('.//Log'):
+            if gpslist==GPSfile:
+                self.GPSControll.ValidGPSFile(gpslist)
                 return GPSfile
         return None
         
@@ -302,22 +358,26 @@ class Function():
         """
   
         UploadConfig = self.GetUploadConfig()
-        
+        self.ParseFileToJson()
         #session = ftplib.FTP(UploadConfig['Server IP'],UploadConfig['Server ID'],UploadConfig['Server PW'])
-        ftp = ftplip.FTP()
-        ftp.connect(UploadConfig['Server IP'], port)
-        print ftp.getwelcome()
-        try:
-            print "Logging in..."
-            ftp.login("login", "password")
-        except:
-            "failed to login"
+        ftp = ftplib.FTP()
+        ftp.connect(UploadConfig['Server IP'], 21)
+        ftp.login(UploadConfig['Server ID'],UploadConfig['Server PW'])
+        print "Logging in"
+        
+
         for filename in self.UploadFileList.keys():
+            print 'upload file:',filename
+            try:
+                uploadfile=open('.//Upload//'+filename,'rb')
+                ftp.storbinary("STOR " + filename, uploadfile)     # send the file
+            #file.close()                                    # close file and FTP
             
-            file = open('.//Log//'+filename,'rb')                  # file to send
-            session.storbinary(filename, file)     # send the file
-            file.close()                                    # close file and FTP
-            session.quit()
+                print 'uploaded ',filename
+            except IOError:
+                print "failed to upload"
+        print 'close ftp'
+        ftp.close()
         self.UploadFileList.clear()
         
     def SetUploadFile(self,command,state):
@@ -371,7 +431,8 @@ class Function():
                 dt = datetime.now()
                 sec_since_epoch = time.mktime(dt.timetuple()) + dt.microsecond/1000000.0
                 myUTCtime = sec_since_epoch * 1000
-                self.GPSLogFile.write(str(int(myUTCtime))+","+output)
+                self.GPSLogFile.write(str(dt)+","+output)
+                #self.GPSLogFile.write(str(int(myUTCtime))+","+output)
         
     def AutoSendThread(self):
         while self.AutoSendState:
