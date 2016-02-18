@@ -20,14 +20,7 @@ class Serialport():
 
         
         self.DetectPlatformOS()
-     
-    def SetLogNameAndPath(self,name="original",path="./"):
-        pass
         
-    def CheckLogName(self,name):
-        pass
-    
-    
     
     def GetPlatformOS(self):
         return self.Platform

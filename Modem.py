@@ -57,11 +57,7 @@ class ModemCommand():
         # with open(self.ModemConfList[self.ChooseModem]) as f:
             # CommandList = f.read().splitlines()
         # return CommandList
-        
-    def SpecialCommand(self,path,command):
-        """For those modem that need to special command to enter debug mode
-        """
-        pass    
+          
     
     def GetCommandResultList(self):
         """Get the choose modem's command result list
