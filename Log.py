@@ -1,17 +1,21 @@
 import time
 import sys
-import glob
+import glob,json
 from datetime import datetime
 import threading
 from Serial import Serialport
 from  Tkinter import *
+from Crypto import Random
+from Crypto.Cipher import AES
+from hashlib import md5
+from uuid import getnode as get_mac
 
 class Logger():
     def __init__(self):
         """This is for encry the data and decry
         """
         self.UploadKey = 9600
-        self.TempKey=123
+        self.TempKey="5475731930WireLA5475731930WireLA"
         
         #self.AutoSendState=0
         self.AutoCommandList={}
@@ -19,19 +23,88 @@ class Logger():
         self.GPSLogState = False
         self.ModemLogState=False
         self.GPSLogFile=None
+        self.MAC=get_mac()
+        self.Version=1.0
         
+    def derive_key_and_iv(self,password, salt, key_length, iv_length):
+        d = d_i = ''
+        while len(d) < key_length + iv_length:
+            d_i = md5(d_i + self.TempKey + salt).digest()
+            d += d_i
+        return d[:key_length], d[key_length:key_length+iv_length]
+
+    def Tencrypt(self,in_file, out_file, key_length=32):
+        bs = AES.block_size
+        salt = Random.new().read(bs - len('Salted__'))
+        key, iv = self.derive_key_and_iv(self.TempKey, salt, key_length, bs)
+        cipher = AES.new(key, AES.MODE_CBC, iv)
+        out_file.write('Salted__' + salt)
+        finished = False
+        while not finished:
+            chunk = in_file.read(1024 * bs)
+            if len(chunk) == 0 or len(chunk) % bs != 0:
+                padding_length = (bs - len(chunk) % bs) or bs
+                chunk += padding_length * chr(padding_length)
+                finished = True
+            out_file.write(cipher.encrypt(chunk))
+
+    def Tdecrypt(self,in_file, out_file, key_length=32):
+        bs = AES.block_size
+        salt = in_file.read(bs)[len('Salted__'):]
+        key, iv = self.derive_key_and_iv(self.TempKey, salt, key_length, bs)
+        cipher = AES.new(key, AES.MODE_CBC, iv)
+        next_chunk = ''
+        finished = False
+        while not finished:
+            chunk, next_chunk = next_chunk, cipher.decrypt(in_file.read(1024 * bs))
+            if len(next_chunk) == 0:
+                padding_length = ord(chunk[-1])
+                chunk = chunk[:-padding_length]
+                finished = True
+            out_file.write(chunk)    
+
+    
+    
+    def pad(self,s):
+        return s + b"\0" * (AES.block_size - len(s) % AES.block_size)
+
+    def encrypt(self,message, key, key_size=256):
+        message = self.pad(message)
+        iv = Random.new().read(AES.block_size)
+        cipher = AES.new(key, AES.MODE_CBC, iv)
+        return iv + cipher.encrypt(message)
+
+    def decrypt(self,ciphertext, key):
+        iv = ciphertext[:AES.block_size]
+        cipher = AES.new(key, AES.MODE_CBC, iv)
+        plaintext = cipher.decrypt(ciphertext[AES.block_size:])
+        return plaintext.rstrip(b"\0")    
         
-    def Encry(self,file,mode):
+    def Encrypt_file(self,file_name,mode):
         """encry the file with key
         mode :1 -->upload encry
         mode :2 -->temp encry
         """
+        
+        if mode ==1:
+            pass
+        else:
+            with open(file_name, 'rb') as fo:
+                plaintext = fo.read()
+            enc = self.encrypt(plaintext, self.TempKey)
+            with open(file_name + ".enc", 'wb') as fo:
+                fo.write(enc)
         pass
         
         
-    def Decry(self,file):
+    def Decrypt_file(self,file_name):
         """decrt the temp file
         """
+        with open(file_name, 'rb') as fo:
+            ciphertext = fo.read()
+        dec = self.decrypt(ciphertext, self.TempKey)
+        with open(file_name[:-4], 'wb') as fo:
+            fo.write(dec)
         pass
     
     def SetGPSLogState(self,state):
@@ -65,8 +138,12 @@ class Logger():
             self.ModemLogFile = open(".//Log//"+myUTCtime+"-"+file,"w")
         else:
             if self.ModemLogFile != None :
-
+                filename=self.ModemLogFile.name
                 self.ModemLogFile.close()
+                #self.Encrypt_file(filename,2)
+                
+                with open(filename, 'rb') as in_file, open(filename+'.enc', 'wb') as out_file:
+                    self.Tencrypt(in_file, out_file)
                 self.ModemLogFile = None
     
     def SetGPSLogFile(self,mode):
@@ -80,8 +157,12 @@ class Logger():
             self.GPSLogFile = open(".//Log//"+myUTCtime+"-GPS","w")
         else:
             if self.GPSLogFile != None :
-
+                filename=self.GPSLogFile.name
                 self.GPSLogFile.close()
+                #self.Encrypt_file(filename,2)
+                
+                with open(filename, 'rb') as in_file, open(filename+'.enc', 'wb') as out_file:
+                    self.Tencrypt(in_file, out_file)
                 self.GPSLogFile = None
     
     def StartAutoThread(self):
@@ -148,3 +229,146 @@ class Logger():
                 myUTCtime = sec_since_epoch * 1000
                 self.GPSLogFile.write(str(dt)+","+output)
                 #self.GPSLogFile.write(str(int(myUTCtime))+","+output)
+    
+
+    
+    def ToJson(self,signal,gps,modem):
+        """parse the signal and gps into one json file
+        assume the gps log and signal are both as same timestamp formate 
+        """
+        GPSFile=None
+        GPSLines=None
+        self.modem=modem
+        if gps!=None:
+            #self.Decrypt_file(".//Upload//"+gps+'.enc')
+            with open(".//Upload//"+gps+'.enc', 'rb') as in_file, open(".//Upload//"+gps, 'wb') as out_file:
+                self.Tdecrypt(in_file, out_file)
+            GPSFile=open(".//Upload//"+gps,"r")
+            
+            #GPSLines=GPSFile.readlines()
+            gpsstate=1
+        #SignalFile = open('.//Log//'+signal,'r')
+        #SignalLines=SignalFile.readlines()
+        
+        WriteFile = open('.//Upload//'+signal,'w')
+        
+        
+        
+        timestamp=None
+        jsonArray=[]
+        jsonElement={}
+        
+        #self.Decrypt_file('.//Log//'+signal+'.enc')
+        with open('.//Log//'+signal+'.enc', 'rb') as in_file, open('.//Log//'+signal, 'wb') as out_file:
+                self.Tdecrypt(in_file, out_file)
+                
+        with open('.//Log//'+signal) as SignalFile:
+            
+            CommandResultList = self.modem.GetCommandResultList()#TODO need to dynamic change the modem 
+            print 'open ',signal,CommandResultList
+            for SignalLine in SignalFile:
+                #print SignalLine
+                if len(SignalLine) >15:#remove empty line
+                    SignalLine = SignalLine.strip() 
+                    SignalLine=SignalLine.replace(':',',')
+                    SignalLine=SignalLine.replace('"','')
+                   # SignalLine=SignalLine.replace('/','')
+                    line=SignalLine.split(',')#first is timestamp,second is command, other is result
+                    if line[1] not in CommandResultList or len(line)<3:
+                        #if is not a command result, pass to next one
+                        continue
+                    if timestamp == None:
+                        #initial the time stamp
+                        jsonElement.clear()
+                        jsonElement=self.JsonReset()
+                        #print jsonElement
+                        timestamp= long(float(line[0])) #get minisceond
+                        if GPSFile!=None:
+                            #if GPS is available, check the time is correct or not
+                            GPSLine=GPSFile.readline()
+                            GPSLine=GPSLine.split(',')
+                            GPStime = long(float(GPSLine[0]))/1000#use second to divide the data,not minisceond
+                            #print 'GPS time=',GPStime
+                            while timestamp/1000 > GPStime:
+                                # if the GPS time is less than signal. then search the right one
+                                GPSLine=GPSFile.readline()
+                                if not GPSLine:#end of file, no data
+                                    GPSFile.close()
+                                    GPSFile=None
+                                    GPSLine=None
+                                    break
+                                GPSLine=GPSLine.split(',')
+                                GPStime = long(float(GPSLine[0]))/1000
+                    
+                    if long(float(line[0]))/1000 != timestamp/1000:#next timestamp
+                        timestamp=long(line[0])
+                        jsonArray.append(jsonElement.copy())
+                        jsonElement.clear()
+                        jsonElement=self.JsonReset()
+                    
+                    
+                    command = CommandResultList[line[1]] #todo need to dynamic detect the right command list, now only get the choose one
+                    
+                    jsonElement['CellularInfo'][0]['Time']=timestamp
+                    
+                    #print timestamp,jsonElement['Time']
+                    for index, response in enumerate(command):
+                        #index start with 0
+                        if line[index+2]=='D':
+                            #don't care
+                            continue
+                        if response in jsonElement['CellularInfo'][0]:
+                            jsonElement['CellularInfo'][0][response]=str(line[index+2])
+                        else:
+                            jsonElement['other'][0][response]=line[index+2]
+                    
+                    if GPSFile != None:
+                        #if GPS is available, check the time is correct or not
+                        #print timestamp/1000,GPStime
+                        while timestamp/1000 > GPStime:
+                            # if the GPS time is less than signal. then search the right one
+                            GPSLine=GPSFile.readline()
+                            if not GPSLine:#end of file, no data
+                                GPSFile.close()
+                                GPSFile=None
+                                GPStime=None
+                                break
+                            GPSLine=GPSLine.split(',')
+                            GPStime = long(float(GPSLine[0]))/1000
+                        
+                        if timestamp/1000 == GPStime:#check if is in the same sceond.  don't care minisceond
+                            jsonElement['Lat']=GPSLine[1]
+                            jsonElement['Lng']=GPSLine[3]
+                            
+                        
+                    #print line
+                    
+        jsonArray.append(jsonElement.copy())     #last data       
+        json.dump(jsonArray, WriteFile,indent=2)        
+        
+        #SignalFile.close()
+        WriteFile.close()
+        
+        with open('.//Upload//'+signal, 'rb') as in_file, open('.//Upload//'+signal+'.enc', 'wb') as out_file:
+            self.Tencrypt(in_file, out_file)
+
+        if GPSFile != None:
+            GPSFile.close()
+        #os.rename('.//Log//'+signal,'.//Log//'+signal+'-Uploaded')
+        
+    def JsonReset(self):
+        jsonElement={}
+        jsonElement.clear()
+        seq = ("AppicationType", "ApplicationVersion", "Account","IMEI","Lat", "Lng","CellularInfo","other","equipmentId")
+        jsonElement=dict.fromkeys(seq)
+        jsonElement["AppicationType"]=self.commandserial.GetPlatformOS()
+        jsonElement["ApplicationVersion"]=self.Version
+        jsonElement["Account"]='this is pc'
+        jsonElement["equipmentId"]=self.MAC
+        jsonElement["CellularInfo"]=[]
+        cellseq=( "Time","CellID","CellMCC","CellMNC","CellPCI","CellTAC","RSSI","SINR","RSRQ","RSRP")
+        cell=dict.fromkeys(cellseq)
+        jsonElement["CellularInfo"].append(cell)
+        jsonElement["other"]=[]
+        jsonElement["other"].append({})
+        return jsonElement

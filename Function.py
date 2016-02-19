@@ -42,7 +42,7 @@ class Function():
         self.UploadConfigList={}
         self.UploadFileList={}
         
-        self.Version=1.0;
+        
 
     def SetModemLog(self,state):
         """log the modem and the gps same time
@@ -185,8 +185,9 @@ class Function():
         """
         filelist = []
         for file in os.listdir('.//Log'):
-            if not ( file.endswith('GPS') or file.endswith('-Uploaded') ):
-                filelist.append(file)
+            #if not ( file.endswith('GPS') or file.endswith('-Uploaded') or file.endswitch):
+            if file.endswith('.enc') and not file.endswith('GPS.enc'):
+                filelist.append(file[:-4])
                 #print file
         return filelist
         pass
@@ -197,10 +198,13 @@ class Function():
         """
         SignalFileList = self.UploadFileList.keys()
         
+        
+        self.logger.Setcommandserial(self.commandserial)
         for file in SignalFileList:
             print 'ParseFileToJson with file:',file
-            GPSFIle = self.CheckGPS(file)
-            self.ToJson(file,GPSFIle)
+            GPSFile = self.CheckGPS(file)
+            self.logger.ToJson(file,GPSFile,self.modem)
+            #self.ToJson(file,GPSFile)
             
     
     def ToJson(self,signal,gps):
@@ -269,7 +273,8 @@ class Function():
                     
                     command = CommandResultList[line[1]] #todo need to dynamic detect the right command list, now only get the choose one
                     
-                    jsonElement['Time']=timestamp
+                    jsonElement['CellularInfo'][0]['Time']=timestamp
+                    #print timestamp,jsonElement['Time']
                     for index, response in enumerate(command):
                         #index start with 0
                         if line[index+2]=='D':
@@ -302,7 +307,7 @@ class Function():
                     #print line
                     
         jsonArray.append(jsonElement.copy())     #last data       
-        json.dump(jsonArray, WriteFile)        
+        json.dump(jsonArray, WriteFile,indent=2)        
         
         #SignalFile.close()
         WriteFile.close()
@@ -406,10 +411,9 @@ class Function():
             # myUTCtime = datetime.strftime(datetime.utcnow(),'%Y-%m-%d %H-%M-%S')
             # self.ModemLogFile.write(myUTCtime+":"+output+"\r\n")
         
-        
-"""
+
     def GPSLogThread(self):
-        """log the gps data from serial by threading
+        """log the gps data #from serial by threading
         TODO make sure the serial can readline
         """
         
@@ -441,4 +445,3 @@ class Function():
                     self.ModemLogFile.write(str(int(myUTCtime))+":"+output+"\r\n")
             time.sleep(self.AutoSendTimeInterval)   
             pass
-"""

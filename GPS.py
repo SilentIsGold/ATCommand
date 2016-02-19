@@ -2,7 +2,7 @@ import time
 import sys
 import glob
 from datetime import datetime
-
+from Log import Logger
 
 
 
@@ -15,15 +15,20 @@ class GPSCommand():
         """
         self.BaudRate = 9600
         self.UpdateRate = 1000
-        
+        self.logger=Logger()
     
     def ValidGPSFile(self,file):
         """Get GNRMC to upload dict file
         """
         print 'ValidGPSFile ', file
         WriteFile = open(".//Upload//"+file,"w")
+        #self.logger.Decrypt_file('.//Log//'+file+'.enc')
+        with open('.//Log//'+file+'.enc', 'rb') as in_file, open('.//Log//'+file, 'wb') as out_file:
+            self.logger.Tdecrypt(in_file, out_file)
+        
         with open('.//Log//'+file) as f:
             for line in f.readlines():
+                #print line
                 line = line.strip() 
                 temp = str(line)
                 data = temp.split(',')
@@ -31,6 +36,9 @@ class GPSCommand():
                 if output != None:
                     WriteFile.write(output+"\r\n")
         WriteFile.close()
+        #self.logger.Encrypt_file(".//Upload//"+file,2)
+        with open(".//Upload//"+file, 'rb') as in_file, open(".//Upload//"+file+'.enc', 'wb') as out_file:
+            self.logger.Tencrypt(in_file, out_file)
         
     def Parsecommand(self,data):
         """parse rmc 
