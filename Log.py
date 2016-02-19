@@ -7,8 +7,12 @@ from Serial import Serialport
 from  Tkinter import *
 from Crypto import Random
 from Crypto.Cipher import AES
+from Crypto.Signature import PKCS1_v1_5
+from Crypto.PublicKey import RSA
+from Crypto.Hash import SHA
 from hashlib import md5
 from uuid import getnode as get_mac
+
 
 class Logger():
     def __init__(self):
@@ -25,6 +29,7 @@ class Logger():
         self.GPSLogFile=None
         self.MAC=get_mac()
         self.Version=1.0
+        self.RSAPrivateKey=None
         
     def derive_key_and_iv(self,password, salt, key_length, iv_length):
         d = d_i = ''
@@ -63,49 +68,26 @@ class Logger():
                 finished = True
             out_file.write(chunk)    
 
+    def RASsignature(self,in_file, out_file):
+        """create RSA signature 
+        """
+        fd = open('priv.pem', 'r')
+        self.RSAPrivateKey = fd.read()
+        fd.close()
+        # Load private key
+        priv_key = RSA.importKey(self.RSAPrivateKey)
+        
+        # Create PKCS1 handler
+        priv_cipher = PKCS1_v1_5.new(priv_key)
+        # Read test file    
+        message = in_file.read()
+        # Create SHA1 hash object
+        h = SHA.new(message)
+        print 'hash',h
+        # write signature into file
+        out_file.write(priv_cipher.sign(h)) 
     
     
-    def pad(self,s):
-        return s + b"\0" * (AES.block_size - len(s) % AES.block_size)
-
-    def encrypt(self,message, key, key_size=256):
-        message = self.pad(message)
-        iv = Random.new().read(AES.block_size)
-        cipher = AES.new(key, AES.MODE_CBC, iv)
-        return iv + cipher.encrypt(message)
-
-    def decrypt(self,ciphertext, key):
-        iv = ciphertext[:AES.block_size]
-        cipher = AES.new(key, AES.MODE_CBC, iv)
-        plaintext = cipher.decrypt(ciphertext[AES.block_size:])
-        return plaintext.rstrip(b"\0")    
-        
-    def Encrypt_file(self,file_name,mode):
-        """encry the file with key
-        mode :1 -->upload encry
-        mode :2 -->temp encry
-        """
-        
-        if mode ==1:
-            pass
-        else:
-            with open(file_name, 'rb') as fo:
-                plaintext = fo.read()
-            enc = self.encrypt(plaintext, self.TempKey)
-            with open(file_name + ".enc", 'wb') as fo:
-                fo.write(enc)
-        pass
-        
-        
-    def Decrypt_file(self,file_name):
-        """decrt the temp file
-        """
-        with open(file_name, 'rb') as fo:
-            ciphertext = fo.read()
-        dec = self.decrypt(ciphertext, self.TempKey)
-        with open(file_name[:-4], 'wb') as fo:
-            fo.write(dec)
-        pass
     
     def SetGPSLogState(self,state):
         self.GPSLogState=state
@@ -349,8 +331,8 @@ class Logger():
         #SignalFile.close()
         WriteFile.close()
         
-        with open('.//Upload//'+signal, 'rb') as in_file, open('.//Upload//'+signal+'.enc', 'wb') as out_file:
-            self.Tencrypt(in_file, out_file)
+        with open('.//Upload//'+signal, 'rb') as in_file, open('.//Upload//'+signal+'.sig', 'wb') as out_file:
+            self.RASsignature(in_file, out_file)
 
         if GPSFile != None:
             GPSFile.close()

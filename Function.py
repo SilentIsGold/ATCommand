@@ -362,9 +362,11 @@ class Function():
         for filename in self.UploadFileList.keys():
             print 'upload file:',filename
             try:
-                uploadfile=open('.//Upload//'+filename,'rb')
-                ftp.storbinary("STOR " + filename, uploadfile)     # send the file
-            #file.close()                                    # close file and FTP
+                #ploadfile=open('.//Upload//'+filename,'rb')
+                with open('.//Upload//'+filename,'rb') as uploadfile, open('.//Upload//'+filename+'.sig','rb') as uploadfileSIG:
+                    ftp.storbinary("STOR " + filename, uploadfile)     # send the file
+                    ftp.storbinary("STOR " + filename+'.sig', uploadfileSIG)
+            
             
                 print 'uploaded ',filename
             except IOError:
